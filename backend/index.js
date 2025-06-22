@@ -25,5 +25,5 @@ app.post("/api/tasks", async (req, res) => {
   res.json(result.rows[0]);
 });
 
-const port = 3500;
+const port = 3100;
 app.listen(port, () => console.log(`Backend listening on port ${port}`));

@@ -17,7 +17,7 @@ spec:
         - name: backend
           image: backend:1
           ports:
-            - containerPort: 3500
+            - containerPort: 3100
           env:
             - name: DB_USER
               value: "postgres"
@@ -36,4 +36,4 @@ spec:
   selector:
     app: backend
   ports:
-    - port: 3500
+    - port: 3100
