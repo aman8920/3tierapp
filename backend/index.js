@@ -1,29 +1,38 @@
-const express = require("express");
-const cors = require("cors");
-const { Pool } = require("pg");
+const express = require('express');
+const cors = require('cors');
+const sequelize = require('./db');
+const Task = require('./models/task');
+const tasks = require('./routes/tasks');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "postgres-service",
-  database: process.env.DB_NAME || "todo",
-  password: process.env.DB_PASSWORD || "postgres",
-  port: 5432,
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
-app.get("/api/tasks", async (req, res) => {
-  const result = await pool.query("SELECT * FROM tasks");
-  res.json(result.rows);
+// DB test endpoint
+app.get('/dbtest', async (req, res) => {
+  try {
+    const [result] = await sequelize.query('SELECT NOW()');
+    res.json({ now: result[0].now || result[0].NOW });
+  } catch (error) {
+    console.error('DB test failed:', error);
+    res.status(500).json({ error: 'Database not reachable' });
+  }
 });
 
-app.post("/api/tasks", async (req, res) => {
-  const { title } = req.body;
-  const result = await pool.query("INSERT INTO tasks (title) VALUES ($1) RETURNING *", [title]);
-  res.json(result.rows[0]);
-});
+app.use('/api/tasks', tasks);
 
-const port = 3100;
-app.listen(port, () => console.log(`Backend listening on port ${port}`));
+const port = process.env.PORT || 3500;
+app.listen(port, async () => {
+  try {
+    await sequelize.sync();
+    console.log('DB connected & listening on port ' + port);
+  } catch (err) {
+    console.error('Failed to connect to DB:', err);
+  }
+});
